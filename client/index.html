@@ -43,6 +43,7 @@
     
     <script type="text/javascript">
       (function(){
+        //Read the dashboard JSON definition file and create a dashboard
         readJSONFile("data/alfresco_json_template.json", function(text){          
               data = JSON.parse(text);
               var noOfDashboards = data.dashboards.length
@@ -112,7 +113,6 @@
                       var selectedItem = e.detail.chart.getSelection()[0];
                       if(selectedItem){
                         var selectedValue = gc1.data.getValue(selectedItem.row, selectedItem.column === null ? 0 : selectedItem.column);
-                        console.log(selectedValue);
                       }
 
                       var widgetID = gc1.id.split('_')[1];
@@ -121,58 +121,32 @@
                         for(var targetID in sourceWidgetProps.interactions.targetWidget_ID) {
                           (function(targetID) {
                             var targetWidget_ID = sourceWidgetProps.interactions.targetWidget_ID[targetID];
-                            console.log(targetWidget_ID);
-                            /*var spinner = document.getElementById('spinner_gc_'+targetWidget_ID);
-                            spinner.active = true;*/
-
                             var targetWidget_update_field = sourceWidgetProps.interactions.update_field;
                           
                             var targetWidgetProps = getWidgetProperties(targetWidget_ID);
-                            if(targetWidgetProps) {
-                            
-                              //Update the dashboard Title with the User Selected Field
-                              targetWidgetProps.title += '[ ' + selectedValue +' ]';
-                            
+                            if(targetWidgetProps) {                           
                               var targetWidgetRoxieUrl = targetWidgetProps.data;
                               targetWidgetRoxieUrl = getRoxieServiceURlForInputParams(targetWidgetProps.inputParameter, targetWidgetRoxieUrl);
                             
                               var paramString = targetWidgetRoxieUrl.split('?')[1];
-                              targetWidgetRoxieUrl = targetWidgetRoxieUrl.split('?')[0];
-                              
-                              //var pattern = targetWidget_update_field+'='+targetWidgetProps.inputParameter.state;
+                              targetWidgetRoxieUrl = targetWidgetRoxieUrl.split('?')[0];                              
                               var pattern = targetWidget_update_field+'='+targetWidgetProps.inputParameter[targetWidget_update_field];
                               var replacement = targetWidget_update_field+'='+selectedValue;
                             
                               paramString = paramString.replace(pattern, replacement);
                               targetWidgetRoxieUrl += '?'+paramString;
-                              console.log(targetWidgetRoxieUrl);
-
-
-                              //Set empty Data before AJAX call
-                              /*var targetChartElement = document.getElementById('gc_'+targetWidgetProps.id);
-                              targetChartElement.setAttribute("cols", 
-                                JSON.stringify([{"type": "string", "label": "Site ID"}, {"type": "number", "label": "Transaction Count"}]));
-                              targetChartElement.setAttribute("rows", JSON.stringify([["", 0]]));*/
 
                               // Set the Progress bar here
                               var parentDiv = document.getElementById('div_'+targetWidgetProps.id);
-                              console.log(parentDiv);
                               var pp = parentDiv.querySelector('poly-chart');
-                              console.log(pp);
                               pp.loading = true;
                               pp.customStyle['--overlay-opacity'] = "0";
-                              
                               pp.updateStyles();
-
 
                               // Call the ROXIE service and convert data to Datatable Object
                               readJSONFile(targetWidgetRoxieUrl, function(response) {
-                                console.log("Call from interactions definition!!!!");
                                 var targetChartElement = document.getElementById('gc_'+targetWidgetProps.id);
-                                console.log(targetChartElement);
-
                                 var rootKey;
-                                //console.log(data.detail.response);
                                 var jsonResult = JSON.parse(response);
                                 for(var prop in jsonResult) {
                                   rootKey = prop;
@@ -181,11 +155,7 @@
                                 //Done so that we do not need to hard code the root object (which changes based with every roxie query)
                                 var resultNode = jsonResult[rootKey].Results.result_1.Row;
                                 var flds = targetWidgetProps.fields
-                                console.log("FIELDS: ", flds);
-
                                 var loader = document.querySelector('#loader');
-                                console.log(loader);
-                            
                                 loader.dataTable(null)
                                       .then(dt => {
                                         return dt;
@@ -196,67 +166,23 @@
                                         });
                                           
                                         var dtRows = convertTo2DArray(resultNode,  getFields(flds));
-                                        console.log(dtRows);
                                         dt.addRows(dtRows);
-
-                                        //var gc = document.querySelector('google-chart#'+this.id);
                                         targetChartElement.data = dt;
-
                                       })
                                       .catch(function(error){
                                         console.log(error);
                                       });
-
-
-                                /*var columnsArray, rowsArray;
-                                if(targetWidgetProps.type === 'table') {
-                                  console.log(targetWidgetProps.fields);
-                                  //Call method to populate columns for Google Chart
-                                  columnsArray = getColumnsForGoogleChart(targetWidgetProps.fields);
-                                  var cols = getFields(targetWidgetProps.fields);
-                                  if(resultNode !== undefined && resultNode.length > 0) {
-                                    rowsArray = getRowsForGoogleChart(resultNode, cols);
-                                  }       
-                                } else {
-                                  var xaxis = targetWidgetProps.xaxis;
-                                  var yaxis = targetWidgetProps.yaxis;
-                                  var columnsArray = getColumnsForGoogleChart(xaxis);
-                                  var arr2 = getColumnsForGoogleChart(yaxis);
-
-                                  Array.prototype.push.apply(columnsArray,arr2);
-
-                                  var cols = getFields(xaxis);
-                                  var intCols = getFields(yaxis);
-
-                                  Array.prototype.push.apply(cols,intCols);
-                                  if(resultNode !== undefined && resultNode.length > 0) {
-                                    rowsArray = getRowsForGoogleChart(resultNode, cols);                                    
-                                  }
-                                        
-                                }
-                                
-                                if(rowsArray !== undefined && rowsArray.length > 0) {
-                                  targetChartElement.setAttribute("cols", JSON.stringify(columnsArray));
-                                  targetChartElement.setAttribute("rows", JSON.stringify(rowsArray));
-                                  //spinner.active = false;
-                                }*/
-
                               });
                             } // End of if(targetWidgetProps)
                           })(targetID);
                         }
                       } // End of if(sourceWidgetProps) 
                     }); // End of gc1.addEventListener("google-chart-select")                  
-                  } // End of if(interactions != null)
-                  
+                  } // End of if(interactions != null)                 
                 }
               }
             });
-      })()
-          
-         
+      })()    
     </script>
-    
-
   </body>
 </html>

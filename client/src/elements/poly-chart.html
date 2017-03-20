@@ -10,11 +10,6 @@
 				--overlay-zindex
 				--overlay-display
 			}
-	     
-	      	.google-chart-style {
-	    		width: 100%;
-	    		height: 90%;
-	    	}
 
 	    	.google-chart-class {
     			width:100%;
@@ -23,21 +18,9 @@
     			z-index: var(--overlay-zindex);
 	      	}
 
-	      	.loader {
-			    background: #a3a3a3;
-			    position: relative;
-			    opacity: 0.5;
-			    z-index: 20;
-			}
-
 			#loading-img {
 			    background: url(../../images/loader.gif) center center no-repeat;
 			    height: 100%;
-			}
-
-			.hiddenDiv {
-				width: 100%;
-				height: 100%;
 			}
 
 	    </style>
@@ -85,27 +68,22 @@
 			observers: ['ajaxCall(id, url, inputparams)', 'afterAjaxResponse(type, ajaxResponse, fields, id)'],
 
 			ready: function() {
-				console.log("ready");
-				
 				this.loading = true;
 			},
+
 			chartLoaded: function() {
-				console.log("chartLoaded");
 				this.loading = !this.loading;
 			},
+
 			_loaded: function() {
-				//this.loading = true;
 				if(!this.loading ) {
 					console.log("loading is false");
 					this.customStyle['--overlay-opacity'] = "1";
                 	this.updateStyles();
-				}
-				
+				}				
 			},
 
 			ajaxCall: function(id, url, inputparams){
-				console.log("inputparams: "+inputparams);
-				console.log("url: "+url);
 				var ajx = document.querySelector('iron-ajax#'+id+"_ajx");
 				if(inputparams === "false") {
 					ajx.generateRequest();
@@ -123,7 +101,6 @@
 
 				//Done so that we do not need to hard code the root object (which changes based with every roxie query)
 				var resultNode = jsonResult[rootKey].Results.result_1.Row;
-				console.log(resultNode);
 				if(resultNode.length === 0) {
 					this.loading = false;
 				}
@@ -132,10 +109,7 @@
 			},
 
 			afterAjaxResponse: function(chartType,ajaxResponse, fields, id) {
-				console.log(chartType);
         		var loader = document.querySelector('#loader');
-        		console.log(loader);
-        
         		loader.dataTable(null)
 		              .then(dt => {
 		                return dt;
@@ -146,15 +120,13 @@
 		                });
 		                  
 		                var dtRows = convertTo2DArray(ajaxResponse,  getFields(fields));
-		                console.log(dtRows);
 		                dt.addRows(dtRows);
-
 		 	            var gc = document.querySelector('google-chart#'+id);
 		                gc.data = dt;
 
 		        	  })
 		              .catch(function(error){
-		                console.log(error);
+		                console.error(error);
 		              });
 			}
 

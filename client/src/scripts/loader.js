@@ -116,21 +116,15 @@ function urlChecker(url) {
 	}
 }
 
-function isInArray(value, array) {
-  return array.indexOf(value) > -1;
-}
-
 function isNumeric(num){
     return !isNaN(num)
 }
 
 
 function convertTo2DArray(response, cols) {
-	//var innerArrayLength = Object.keys(response[0]).length;
 	var innerArrayLength = cols.length;
 	var my2dArray = new Array(response.length);
 	for(var i = 0; i < (response.length); i++){
-		//my2dArray[i] = new Array(Object.keys(response[0]).length);
 		my2dArray[i] = new Array(cols.length);
 	}
 
@@ -141,32 +135,6 @@ function convertTo2DArray(response, cols) {
 	}
 
 	return my2dArray;
-}
-
-function getColumnsForGoogleChart(fields) {
-	//Clone the Array so that you don't modify the original Array
-	var cpyFields = JSON.parse(JSON.stringify(fields));
-	cpyFields.forEach(function(column, index) {
-		for(var prop in column){
-			delete column.endpointValue;
-		}
-	});
-
-	return cpyFields;
-}
-
-function getRowsForGoogleChart(data, cols) {
-	//Clone the Array so that you don't modify the original Array
-	var cpyFields = JSON.parse(JSON.stringify(data)); 
-	cpyFields.forEach(function(column, index) {
-		for(var prop in column) {
-			if(!isInArray(prop, cols)) {
-				delete column[prop];
-			} 
-		}
-	});
-
-	return convertTo2DArray(cpyFields, cols);
 }
 
 function getFields(fields){
@@ -180,15 +148,4 @@ function getFields(fields){
 	});
 
 	return myArr;
-}
-
-
-var convertToDataTableRowFormat = function(obj) {
-	var output = obj.map(function(element) {
-		return Object.keys(element).map(function(key) { 
-            return element[key];
-        });
-    });
-
-	return output;
 }
