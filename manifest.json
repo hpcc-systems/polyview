@@ -1,0 +1,7 @@
+{
+  "name": "dashboard",
+  "short_name": "dashboard",
+  "description": "Dashboard using Polymer",
+  "start_url": "/",
+  "display": "standalone"
+}

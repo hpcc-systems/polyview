@@ -1,0 +1,163 @@
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/google-chart/google-chart.html">
+<link rel="import" href="../../bower_components/paper-progress/paper-progress.html">
+
+<dom-module id="poly-chart">
+	<template>
+		<style type="text/css">
+			:host {
+				--overlay-opacity
+				--overlay-zindex
+				--overlay-display
+			}
+	     
+	      	.google-chart-style {
+	    		width: 100%;
+	    		height: 90%;
+	    	}
+
+	    	.google-chart-class {
+    			width:100%;
+    			height:90%;
+    			opacity: var(--overlay-opacity, 1);
+    			z-index: var(--overlay-zindex);
+	      	}
+
+	      	.loader {
+			    background: #a3a3a3;
+			    position: relative;
+			    opacity: 0.5;
+			    z-index: 20;
+			}
+
+			#loading-img {
+			    background: url(../../images/loader.gif) center center no-repeat;
+			    height: 100%;
+			}
+
+			.hiddenDiv {
+				width: 100%;
+				height: 100%;
+			}
+
+	    </style>
+			<iron-ajax
+			 	id={{id}}_ajx
+			 	url={{url}}
+			 	handle-as="json"
+			 	on-response="handleResponse">
+			</iron-ajax>
+
+			<template is="dom-if" if={{loading}}>
+				<paper-progress indeterminate="true" style="width: 100%"></paper-progress>			
+			</template>
+
+			<div hidden$="[[!loading]]" id="loading-img"></div>
+
+			<google-chart 
+				class="google-chart-class"
+				id={{id}}
+				type={{type}}
+				options={{options}}
+				on-google-chart-ready='chartLoaded'>
+			</google-chart>
+			
+	</template>
+	<script>
+		Polymer({
+			is: "poly-chart",
+			properties : {
+				id: String,
+				url: String,
+				type: String,
+				options: Object,
+				fields: Array,
+				inputparams: String,
+				ajaxResponse: Object,
+				loading: {
+					type: Boolean,
+					value: false,
+					notify: true,
+					observer: '_loaded'
+				}
+			},
+
+			observers: ['ajaxCall(id, url, inputparams)', 'afterAjaxResponse(type, ajaxResponse, fields, id)'],
+
+			ready: function() {
+				console.log("ready");
+				
+				this.loading = true;
+			},
+			chartLoaded: function() {
+				console.log("chartLoaded");
+				this.loading = !this.loading;
+			},
+			_loaded: function() {
+				//this.loading = true;
+				if(!this.loading ) {
+					console.log("loading is false");
+					this.customStyle['--overlay-opacity'] = "1";
+                	this.updateStyles();
+				}
+				
+			},
+
+			ajaxCall: function(id, url, inputparams){
+				console.log("inputparams: "+inputparams);
+				console.log("url: "+url);
+				var ajx = document.querySelector('iron-ajax#'+id+"_ajx");
+				if(inputparams === "false") {
+					ajx.generateRequest();
+				} else {
+					this.loading = !this.loading;
+				}
+			},
+
+			handleResponse: function(data) {
+				var rootKey;
+				var jsonResult = data.detail.response;
+				for(var prop in jsonResult) {
+					rootKey = prop;
+				}
+
+				//Done so that we do not need to hard code the root object (which changes based with every roxie query)
+				var resultNode = jsonResult[rootKey].Results.result_1.Row;
+				console.log(resultNode);
+				if(resultNode.length === 0) {
+					this.loading = false;
+				}
+
+				this.ajaxResponse = resultNode;
+			},
+
+			afterAjaxResponse: function(chartType,ajaxResponse, fields, id) {
+				console.log(chartType);
+        		var loader = document.querySelector('#loader');
+        		console.log(loader);
+        
+        		loader.dataTable(null)
+		              .then(dt => {
+		                return dt;
+		              })
+		              .then(function(dt){
+		              	fields.forEach(function(element) {
+		                	dt.addColumn(element.type, element.label);
+		                });
+		                  
+		                var dtRows = convertTo2DArray(ajaxResponse,  getFields(fields));
+		                console.log(dtRows);
+		                dt.addRows(dtRows);
+
+		 	            var gc = document.querySelector('google-chart#'+id);
+		                gc.data = dt;
+
+		        	  })
+		              .catch(function(error){
+		                console.log(error);
+		              });
+			}
+
+		});
+	</script>
+</dom-module>

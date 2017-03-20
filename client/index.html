@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>dashboard</title>
+    <meta name="description" content="dashboard description">
+
+    <!-- See https://goo.gl/OOhYW5 -->
+    <link rel="manifest" href="/manifest.json">
+
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="bower_components/polymer/polymer.html">
+    <link rel="import" href="src/elements/poly-widget.html">
+    <script src="src/scripts/loader.js"></script>
+    <style is="custom-style">
+      html, body { 
+        height: 100%;  width: 100%; padding: 0; margin: 0; 
+      }
+
+      .container {
+        width: 100%;
+        height: 100%;
+      }
+
+      .div-style-class {
+        width: 49.4%;
+        height: 49%;
+        float: left;
+        margin: 4px 4px 4px 4px;
+      }
+      
+      .div_chartHolder {
+        border : 1px solid #CDCDCD;
+        height: 100%;
+        width: 100%;
+      }
+
+    </style>
+  </head>
+  <body>
+    
+    <script type="text/javascript">
+      (function(){
+        readJSONFile("data/alfresco_json_template.json", function(text){          
+              data = JSON.parse(text);
+              var noOfDashboards = data.dashboards.length
+              var container = document.createElement("div");
+              container.setAttribute("class", "container");
+              //Add the Div created as the first child of BODY. 
+              //If not done, the Div gets attached after the last element and gets renedered after the tooltip get created.
+              //This causes the tooltip to hide behind the chart
+              var bodyFirstChild = document.body.firstChild;
+              document.body.insertBefore(container, bodyFirstChild);
+
+              for(var i=0; i < noOfDashboards; i++) {
+                //Dashboard specific parameters
+                var dashboard = data.dashboards[i];
+                var dashboardTitle = dashboard.dashboardTitle;
+                var widgetsArray = dashboard.widgets;
+                var div;
+                var gc1;
+
+                //Get widgets which have interactions defined on it.
+                var interactionsArray = getWidgetsWithInteractions(widgetsArray);
+
+                for(var j = 0; j < widgetsArray.length; j++) {
+                  //Widget specific parameters
+                  var widgetId = widgetsArray[j].id;
+                  var widgetTitle = widgetsArray[j].title;
+                  var type = getGoogleChartType(widgetsArray[j].type);
+                  var fields = widgetsArray[j].fields;
+                  var chartOptions = widgetsArray[j].chartOptions;
+                  var inputParameter = widgetsArray[j].inputParameter;
+                  var interactions = widgetsArray[j].interactions;
+                  var roxieServiceURL = null;
+                  
+                  if(urlChecker(widgetsArray[j].data)) {
+                    roxieServiceURL = widgetsArray[j].data;
+                  } 
+
+                  var div = document.createElement("div");
+                  div.id = "div_"+ widgetId;
+                  div.setAttribute("class", "div-style-class");
+                  container.appendChild(div);
+                  
+                  var div_chartHolder = document.createElement("div");
+                  div_chartHolder.setAttribute("class", "div_chartHolder");
+                  div.appendChild(div_chartHolder);
+
+                  var dashWidget = document.createElement("poly-widget")
+                  div_chartHolder.appendChild(dashWidget);
+                  dashWidget.id = "gc_"+ widgetId;
+                  dashWidget.type = type;
+                  dashWidget.title = widgetTitle;
+                  dashWidget.options = chartOptions;
+                  dashWidget.url = roxieServiceURL;
+                  dashWidget.fields = fields;
+
+                  if(inputParameter != null) {
+                    dashWidget.inputparams = "true";
+                    roxieServiceURL = getRoxieServiceURlForInputParams(inputParameter, roxieServiceURL);
+                  } else {
+                    dashWidget.inputparams = "false";
+                  }
+
+                  if(interactions != null) {
+                      var gc1 = document.querySelector('google-chart');
+                      gc1.addEventListener("google-chart-select", function(e) {
+
+                      var selectedItem = e.detail.chart.getSelection()[0];
+                      if(selectedItem){
+                        var selectedValue = gc1.data.getValue(selectedItem.row, selectedItem.column === null ? 0 : selectedItem.column);
+                        console.log(selectedValue);
+                      }
+
+                      var widgetID = gc1.id.split('_')[1];
+                      var sourceWidgetProps = getWidgetProperties(widgetID);
+                      if(sourceWidgetProps) {
+                        for(var targetID in sourceWidgetProps.interactions.targetWidget_ID) {
+                          (function(targetID) {
+                            var targetWidget_ID = sourceWidgetProps.interactions.targetWidget_ID[targetID];
+                            console.log(targetWidget_ID);
+                            /*var spinner = document.getElementById('spinner_gc_'+targetWidget_ID);
+                            spinner.active = true;*/
+
+                            var targetWidget_update_field = sourceWidgetProps.interactions.update_field;
+                          
+                            var targetWidgetProps = getWidgetProperties(targetWidget_ID);
+                            if(targetWidgetProps) {
+                            
+                              //Update the dashboard Title with the User Selected Field
+                              targetWidgetProps.title += '[ ' + selectedValue +' ]';
+                            
+                              var targetWidgetRoxieUrl = targetWidgetProps.data;
+                              targetWidgetRoxieUrl = getRoxieServiceURlForInputParams(targetWidgetProps.inputParameter, targetWidgetRoxieUrl);
+                            
+                              var paramString = targetWidgetRoxieUrl.split('?')[1];
+                              targetWidgetRoxieUrl = targetWidgetRoxieUrl.split('?')[0];
+                              
+                              //var pattern = targetWidget_update_field+'='+targetWidgetProps.inputParameter.state;
+                              var pattern = targetWidget_update_field+'='+targetWidgetProps.inputParameter[targetWidget_update_field];
+                              var replacement = targetWidget_update_field+'='+selectedValue;
+                            
+                              paramString = paramString.replace(pattern, replacement);
+                              targetWidgetRoxieUrl += '?'+paramString;
+                              console.log(targetWidgetRoxieUrl);
+
+
+                              //Set empty Data before AJAX call
+                              /*var targetChartElement = document.getElementById('gc_'+targetWidgetProps.id);
+                              targetChartElement.setAttribute("cols", 
+                                JSON.stringify([{"type": "string", "label": "Site ID"}, {"type": "number", "label": "Transaction Count"}]));
+                              targetChartElement.setAttribute("rows", JSON.stringify([["", 0]]));*/
+
+                              // Set the Progress bar here
+                              var parentDiv = document.getElementById('div_'+targetWidgetProps.id);
+                              console.log(parentDiv);
+                              var pp = parentDiv.querySelector('poly-chart');
+                              console.log(pp);
+                              pp.loading = true;
+                              pp.customStyle['--overlay-opacity'] = "0";
+                              
+                              pp.updateStyles();
+
+
+                              // Call the ROXIE service and convert data to Datatable Object
+                              readJSONFile(targetWidgetRoxieUrl, function(response) {
+                                console.log("Call from interactions definition!!!!");
+                                var targetChartElement = document.getElementById('gc_'+targetWidgetProps.id);
+                                console.log(targetChartElement);
+
+                                var rootKey;
+                                //console.log(data.detail.response);
+                                var jsonResult = JSON.parse(response);
+                                for(var prop in jsonResult) {
+                                  rootKey = prop;
+                                }
+
+                                //Done so that we do not need to hard code the root object (which changes based with every roxie query)
+                                var resultNode = jsonResult[rootKey].Results.result_1.Row;
+                                var flds = targetWidgetProps.fields
+                                console.log("FIELDS: ", flds);
+
+                                var loader = document.querySelector('#loader');
+                                console.log(loader);
+                            
+                                loader.dataTable(null)
+                                      .then(dt => {
+                                        return dt;
+                                      })
+                                      .then(function(dt){
+                                        flds.forEach(function(element) {
+                                          dt.addColumn(element.type, element.label);
+                                        });
+                                          
+                                        var dtRows = convertTo2DArray(resultNode,  getFields(flds));
+                                        console.log(dtRows);
+                                        dt.addRows(dtRows);
+
+                                        //var gc = document.querySelector('google-chart#'+this.id);
+                                        targetChartElement.data = dt;
+
+                                      })
+                                      .catch(function(error){
+                                        console.log(error);
+                                      });
+
+
+                                /*var columnsArray, rowsArray;
+                                if(targetWidgetProps.type === 'table') {
+                                  console.log(targetWidgetProps.fields);
+                                  //Call method to populate columns for Google Chart
+                                  columnsArray = getColumnsForGoogleChart(targetWidgetProps.fields);
+                                  var cols = getFields(targetWidgetProps.fields);
+                                  if(resultNode !== undefined && resultNode.length > 0) {
+                                    rowsArray = getRowsForGoogleChart(resultNode, cols);
+                                  }       
+                                } else {
+                                  var xaxis = targetWidgetProps.xaxis;
+                                  var yaxis = targetWidgetProps.yaxis;
+                                  var columnsArray = getColumnsForGoogleChart(xaxis);
+                                  var arr2 = getColumnsForGoogleChart(yaxis);
+
+                                  Array.prototype.push.apply(columnsArray,arr2);
+
+                                  var cols = getFields(xaxis);
+                                  var intCols = getFields(yaxis);
+
+                                  Array.prototype.push.apply(cols,intCols);
+                                  if(resultNode !== undefined && resultNode.length > 0) {
+                                    rowsArray = getRowsForGoogleChart(resultNode, cols);                                    
+                                  }
+                                        
+                                }
+                                
+                                if(rowsArray !== undefined && rowsArray.length > 0) {
+                                  targetChartElement.setAttribute("cols", JSON.stringify(columnsArray));
+                                  targetChartElement.setAttribute("rows", JSON.stringify(rowsArray));
+                                  //spinner.active = false;
+                                }*/
+
+                              });
+                            } // End of if(targetWidgetProps)
+                          })(targetID);
+                        }
+                      } // End of if(sourceWidgetProps) 
+                    }); // End of gc1.addEventListener("google-chart-select")                  
+                  } // End of if(interactions != null)
+                  
+                }
+              }
+            });
+      })()
+          
+         
+    </script>
+    
+
+  </body>
+</html>

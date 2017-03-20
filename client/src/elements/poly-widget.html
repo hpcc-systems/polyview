@@ -1,0 +1,39 @@
+<link rel="import" href="poly-chart.html">
+<link rel="import" href="poly-header.html">
+
+
+<dom-module id="poly-widget">
+	<template>
+		<style>
+			.widgetHolderDiv {
+				width: 100%;
+				height: 100%;
+			}
+
+		</style>
+		<div class="widgetHolderDiv">
+			<poly-header title={{title}}></poly-header>
+			<poly-chart id={{id}}
+						type={{type}}
+	               		url={{url}}
+	               		options={{options}}
+	               		fields={{fields}}
+	               		inputparams={{inputparams}}>
+	    	</poly-chart>
+    	</div>
+	</template>
+	<script type="text/javascript">
+		Polymer({
+			is: "poly-widget",
+			properties: {
+				id: String,
+				title: String,
+				url: String,
+				type: String,
+				options: Object,
+				fields: Array,
+				inputparams: String
+			}
+		});
+	</script>
+</dom-module>
