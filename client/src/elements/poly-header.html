@@ -1,0 +1,58 @@
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="poly-header">
+	<template>
+		<style>
+			.header {
+
+				--paper-toolbar: {
+    				border-bottom: 1px solid #CDCDCD;
+					background: #fafafa;
+					padding-left: 5px;
+				};
+				
+				--paper-toolbar-height: {
+					height: 50px;
+				}
+
+				--paper-toolbar-content: {
+					padding: 0 0px;
+					margin: 0 0px;
+				}
+
+				--paper-toolbar-title: {
+      				font-size: 14px;
+      				margin-left: 0px;
+      				color: black;
+					font-family: 'Segoe UI', Helvetica, 'Droid Sans', Tahoma, Geneva, sans-serif;
+    			};
+	    	
+			}
+
+			.my-button {
+				--paper-icon-button: {
+					width: 35px;
+		    		height: 35px;
+		    		padding: 6px;
+		    		color: #797C7C;
+				};
+			}
+
+		</style>
+		<paper-toolbar class="header">
+		  <span class="title">{{title}}</span>
+		  	<paper-icon-button class="my-button" icon="settings"></paper-icon-button>
+		  	<paper-icon-button class="my-button" icon="content-copy"></paper-icon-button>
+		</paper-toolbar>
+	</template>
+	<script type="text/javascript">
+		Polymer({
+			is: "poly-header",
+			properties: {
+				title: String
+			}
+		});
+	</script>
+</dom-module>

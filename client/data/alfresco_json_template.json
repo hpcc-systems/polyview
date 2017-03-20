@@ -1,0 +1,97 @@
+{
+	"dashboards": [
+		{
+			"dashboardTitle": "Audit Log Dashboard",
+			"widgets": [
+				{
+					"id": "1111",
+					"title": "Frequency Of the Report",
+					"type": "table",
+					"data": "http://10.173.147.1:8002/WsEcl/submit/query/roxie/alfrescofrequencyvalues/json",
+					"chartOptions": {
+						"width": "35%",
+						"height": "50%"
+					},
+					"interactions": {
+						"targetWidget_ID": ["1112", "1113", "1114"],
+						"update_field": "timeperiod"
+					},
+					"fields": [
+								{ "endpointValue": "timeperiod", "type": "string", "label": "TimePeriod"},
+								{ "endpointValue": "rowid", "type": "number", "label": "ID"}
+							  ]	
+				},
+				{
+					"id": "1112",
+					"title": "Report By Action",
+					"type": "table",
+					"data": "http://10.173.147.1:8002/WsEcl/submit/query/roxie/alfrescoreportbyaction/json",
+					"chartOptions": {
+						"width": "100%",
+						"height": "100%",
+						"showRowNumber": true
+					},
+					"inputParameter": {
+						"timeperiod": ""
+					},
+					"fields": [
+								{ "endpointValue": "action", "type": "string", "label": "Action"},
+								{ "endpointValue": "txncount", "type": "number", "label": "Transaction Count"}
+							  ]
+				},
+				{
+					"id": "1113",
+					"title": "Report By SiteName",
+					"type": "column",
+					"data": "http://10.173.147.1:8002/WsEcl/submit/query/roxie/alfrescoreportbysitename/json",
+					"fields":[
+								{"endpointValue": "site_id", "type": "string", "label": "Site ID"},
+								{"endpointValue": "txncount", "type": "number", "label": "Transaction Count"}
+							 ],
+					"inputParameter": {
+						"timeperiod": ""
+					},
+					"chartOptions": {
+						"legend": { 
+							"position": "top"
+						},
+						"hAxis": {
+							"title": "Site Id",
+							"titleTextStyle": {
+					            "fontSize": 14,
+					            "color": "#053061",
+					            "bold": true,
+					            "italic": false
+					        }
+						},
+						"vAxis": {
+							"title": "Transaction Count",
+					        "titleTextStyle": {
+					            "fontSize": 14,
+					            "color": "#053061",
+					            "bold": true,
+					            "italic": false
+					         }
+						}
+					}
+				},
+				{
+					"id": "1114",
+					"title": "Report By User",
+					"type": "pie",
+					"data": "http://10.173.147.1:8002/WsEcl/submit/query/roxie/alfrescoreportbyuser/json",
+					"chartOptions": {
+						"is3D": true
+					},
+					"fields": [
+								{"endpointValue": "user", "type": "string", "label": "User"},
+								{"endpointValue": "txncount", "type": "number", "label": "Transaction Count"}
+							  ],
+					"inputParameter": {
+						"timeperiod": ""
+					}
+				}
+			]
+		}
+	]
+}
